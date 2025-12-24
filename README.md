@@ -1,132 +1,79 @@
-# 🦅 Smart Price - Monitoramento Inteligente de Preços
+# 🛒 Smart Price Web Scraping
 
-![Status](https://img.shields.io/badge/Status-Em_Desenvolvimento-yellow?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Playwright](https://img.shields.io/badge/Playwright-45ba4b?style=for-the-badge&logo=playwright&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+> **Monitoramento Inteligente de Preços com Dados Reais**
 
-> **Encontre o melhor preço em segundos.** 
-> Sistema de web scraping com arquitetura moderna, capaz de buscar produtos em múltiplos e-commerces simultaneamente.
+Este projeto é um agregador de preços que utiliza técnicas avançadas de Web Scraping para buscar dados em tempo real de grandes e-commerce (Mercado Livre, Magazine Luiza, Amazon via Bing) e apresentar as melhores ofertas para o usuário.
 
----
+## 🚀 Funcionalidades Principais
 
-## 📸 Preview
+*   **Busca em Tempo Real (Real-Time Scraping)**: Dados extraídos na hora, garantindo preços atualizados.
+*   **Bing Shopping Integrado**: Utiliza o Bing como agregador robusto para contornar bloqueios de bots comuns em sites individuais.
+*   **Heurística de Parsing**: Algoritmos inteligentes que identificam produtos visualmente (Preço + Imagem + Link), tornando o scraper resiliente a mudanças de layout (CSS).
+*   **Modo Stealth (Indetectável)**: Uso de Playwright com flags especiais para simular comportamento humano e evitar bloqueios (403/Captcha).
+*   **Histórico no Firebase**: Integração com Firestore para salvar termos pesquisados (opcional).
+*   **Segurança**: Gerenciamento de chaves via variáveis de ambiente (`.env`) e scripts de setup seguros.
 
-*Em breve: Screenshots da interface*
+## 🛠️ Tecnologias Utilizadas
 
----
+*   **Backend**: Python 3.10+, FastAPI, Uvicorn.
+*   **Scraping**: Playwright (Browser Automation), BeautifulSoup4 (HTML Parsing).
+*   **Frontend**: HTML5, CSS3 (Moderno/Responsivo), JavaScript (Vanilla).
+*   **Banco de Dados**: Firebase Firestore (NoSQL).
 
-## 🚀 Tecnologias Utilizadas
+## ⚙️ Instalação e Configuração
 
-### Backend (API)
-- **FastAPI**: Performance ultra-rápida e documentação automática (Swagger UI).
-- **Playwright**: Automação de navegador para scraping de sites dinâmicos (Mercado Livre, etc).
-- **BeautifulSoup4**: Parseamento de HTML.
-- **Firebase Admin SDK**: Persistência de dados e cache de buscas.
+### 1. Pré-requisitos
+*   python 3.9+ 
+*   pip
 
-### Frontend
-- **HTML5 / CSS3 / Vanilla JS**: Interface leve e responsiva.
-- **TailwindCSS**: Estilização moderna via CDN.
-
----
-
-## 🏗️ Arquitetura do Projeto
-
-```mermaid
-graph TD
-    User([Usuário]) -->|Busca| Frontend
-    Frontend -->|GET /api/search| API[FastAPI Backend]
-    
-    subgraph "Camada de Dados"
-        API -->|Cache Check| Firestore[(Firebase DB)]
-    end
-    
-    subgraph "Scraping Engine"
-        API -->|Scrape Request| MLWrapper[Mercado Livre Scraper]
-        API -->|Scrape Request| MagaluWrapper[Magalu Scraper]
-        
-        MLWrapper -->|Playwright| ML[Site Mercado Livre]
-        MagaluWrapper -->|BeautifulSoup| Magalu[Site Magalu]
-    end
-    
-    ML -->|HTML| MLWrapper
-    Magalu -->|HTML| MagaluWrapper
-    
-    MLWrapper -->|Dados Normalizados| API
-    MagaluWrapper -->|Dados Normalizados| API
-    
-    API -->|JSON Response| Frontend
-```
-
----
-
-## 📦 Como Rodar o Projeto
-
-### Pré-requisitos
-- Python 3.9+
-- Node.js (opcional, apenas se quiser rodar ferramentas de front específicas)
-- Conta no Firebase (para credenciais)
-
-### Passo 1: Clone o Repositório
+### 2. Configuração do Backend
 ```bash
-git clone https://github.com/seu-usuario/smart-price-scraper.git
-cd smart-price-scraper
-```
+# Clone o repositório
+git clone https://github.com/LeoRodrigues290/Smart-Price-Web-Scraping-.git
+cd Smart-Price-Web-Scraping-
 
-### Passo 2: Configurar Ambiente Virtual
-```bash
-# Criar venv
+# Crie e ative o ambiente virtual
 python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
 
-# Ativar venv
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-```
-
-### Passo 3: Instalar Dependências
-```bash
+# Instale as dependências
 pip install -r requirements.txt
 
-# Instalar navegadores do Playwright
+# Instale os navegadores do Playwright
 playwright install chromium
 ```
 
-### Passo 4: Configurar Variáveis de Ambiente
-Crie um arquivo `.env` na raiz baseado no exemplo:
-```bash
-cp .env.example .env
+### 3. Configuração de Segurança (.env)
+Crie um arquivo `.env` na raiz do projeto com suas credenciais:
+```ini
+FIREBASE_API_KEY=SuaApiKeyAqui
+FIREBASE_PROJECT_ID=SeuProjectIdAqui
 ```
-*Edite o arquivo `.env` apontando para suas credenciais do Firebase.*
+> **Nota**: Nunca comite este arquivo!
 
-### Passo 5: Executar
+### 4. Configuração do Frontend
+Para gerar o arquivo de configuração seguro do frontend:
 ```bash
-# Iniciar o servidor de desenvolvimento
+python3 scripts/setup_config.py
+```
+
+### 5. Execução
+```bash
+# Inicie o servidor Backend
 uvicorn backend.main:app --reload
+
+# O Frontend roda em qualquer servidor estático ou abrindo o arquivo index.html no navegador
 ```
-Acesse:
-- **Frontend**: `http://localhost:8000/frontend/index.html` (ou abra o arquivo direto no navegador)
-- **Documentação da API**: `http://localhost:8000/docs`
+
+## 🔒 Arquitetura de Segurança
+*   **Chaves de API**: Não são expostas no código fonte versionado.
+*   **Google Credentials**: O backend busca `serviceAccountKey.json` localmente para escritas no banco; se não encontrar, roda em modo "Safe" (Leitura/Offline).
+*   **Commits Limpos**: Histórico git auditado para garantir zero vazamento de segredos.
+
+## ⚠️ Sobre Bloqueios e Performance
+Scraping depende da disponibilidade dos sites alvo. 
+*   Para mitigar bloqueios, usamos **Timeouts de 15s**. Se um site (ex: Magalu) demorar demais, ele é abortado para não travar a experiência do usuário, e os resultados do Bing assumem a prioridade.
 
 ---
-
-## 🚧 Status do Desenvolvimento
-
-- [x] **Fase 1**: Estrutura do Projeto & Setup
-- [x] **Fase 2**: Interface de Busca & Debounce
-- [x] **Fase 3**: Integração Firebase & API Sugestões
-- [x] **Fase 4**: Scraper Mercado Livre (Playwright + Fallback)
-- [ ] **Fase 5**: Scraper Magazine Luiza & Paralelismo
-- [ ] **Fase 6**: Polimento & UX
-
----
-
-## 🤝 Contribuição
-
-Sinta-se à vontade para abrir Issues ou Pull Requests. Vamos construir o melhor comparador de preços open-source!
-
----
-
-*Desenvolvido com 💙 por Leo Rodrigues.*
+Desenvolvido por Leo Rodrigues.

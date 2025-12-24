@@ -43,15 +43,20 @@ class BingShoppingScraper(BaseScraper):
                     # Tenta heurística se falhar seletor
                      await page.screenshot(path="debug_bing.png")
                      
+                # ESTRATÉGIA HEURÍSTICA DE TÍTULO
+                # Bing as vezes retorna classes genéricas ou o título está em atributos aria-label.
+                # A lógica abaixo tenta várias fontes para garantir um título legível.
                 for item in items:
                     try:
-                        # Título - Tenta vários seletores
+                        # 1. Tentativa Direta (Seletores CSS conhecidos)
                         title = ""
                         title_tag = item.select_one(".br-tit, .br-title, .br-standard-title, .pd-title")
                         if title_tag:
                             title = title_tag.text.strip()
                         
-                        # Fallback de Título (Heurística de Texto Mais Longo)
+                        # 2. Heurística de Texto Mais Longo (Fallback)
+                        # Se não achou título, pega todos os textos do card e assume que o
+                        # texto mais longo (que não seja preço) é o título.
                         if not title or title == "Imagem do Produto":
                             # Pega todos os textos do item
                             texts = item.get_text(separator="|", strip=True).split("|")

@@ -65,12 +65,15 @@ async def search_products(q: str):
         magalu_scraper.search(q)
     )
     # results é uma lista de listas: [[bing_items], [ml_items], [magalu_items]]
-    # Flatten e unifica
+    # Flatten: Transforma lista de listas em uma única lista plana de produtos
     all_products = []
     for r in results:
         all_products.extend(r)
     
-    # Lógica de Prioridade: Se tiver dados reais, esconde os mocks
+    # Lógica de Prioridade de Exibição:
+    # O Bing Shopping retorna dados reais agregados.
+    # Se o Bing retornar resultados, filtramos qualquer dado 'Mock' (caso algum scraper tenha falhado e retornado fallback).
+    # Isso garante que o usuário final veja APENAS produtos reais.
     real_products = [p for p in all_products if "(Mock)" not in p['store']]
     
     if real_products:
