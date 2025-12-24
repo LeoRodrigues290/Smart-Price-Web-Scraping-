@@ -20,6 +20,8 @@ app.add_middleware(
 from backend.firebase_config import init_firebase, get_db
 
 from backend.scrapers.mercadolivre import MercadoLivreScraper
+from backend.scrapers.magazineluiza import MagazineLuizaScraper
+import asyncio
 
 # Inicializa Firebase
 init_firebase()
@@ -41,12 +43,27 @@ async def health_check():
 @app.get("/api/search")
 async def search_products(q: str):
     """
-    Busca produtos em múltiplos sites (atualmente ML).
+    Busca produtos em múltiplos sites (ML + Magalu) em paralelo.
     """
     print(f"Recebendo busca por: {q}")
-    scraper = MercadoLivreScraper()
-    results = await scraper.search(q)
-    return {"results": results}
+    
+    ml_scraper = MercadoLivreScraper()
+    magalu_scraper = MagazineLuizaScraper()
+    
+    # Executa os dois scrapers ao mesmo tempo (Paralelismo Assíncrono)
+    # Isso faz com que o tempo total seja igual ao do scraper mais lento, não a soma dos dois.
+    results_ml, results_magalu = await asyncio.gather(
+        ml_scraper.search(q),
+        magalu_scraper.search(q)
+    )
+    
+    # Junta tudo
+    all_results = results_ml + results_magalu
+    
+    # Ordena pelo menor preço
+    all_results.sort(key=lambda x: x['price'])
+    
+    return {"results": all_results}
 
 @app.get("/api/suggestions")
 async def get_suggestions(q: str = ""):
