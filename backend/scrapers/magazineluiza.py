@@ -40,7 +40,13 @@ class MagazineLuizaScraper(BaseScraper):
             """)
 
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=25000)
+                # OTIMIZAÇÃO: Timeout reduzido para 15s
+                await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+                
+                try:
+                    await page.click("button:has-text('Cookies')", timeout=2000)
+                except Exception:
+                    pass # Não há problema se o botão de cookies não aparecer
                 
                 # Scroll para garantir carregamento de lazy load
                 await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")

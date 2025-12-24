@@ -28,9 +28,9 @@ class MercadoLivreScraper(BaseScraper):
             await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=25000)
+                # OTIMIZAÇÃO: Timeout reduzido para 15s
+                await page.goto(url, wait_until="domcontentloaded", timeout=15000)
                 
-                # Tenta lidar com Cookies (opcional)
                 try:
                     await page.click("button:has-text('Aceitar cookies')", timeout=2000)
                 except: pass

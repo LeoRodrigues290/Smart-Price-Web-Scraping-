@@ -17,7 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from backend.firebase_config import init_firebase, get_db, get_firestore_client
+from backend.firebase_config import init_firebase, get_db
 from backend.scrapers.mercadolivre import MercadoLivreScraper
 from backend.scrapers.magazineluiza import MagazineLuizaScraper
 from backend.scrapers.bing_shopping import BingShoppingScraper
