@@ -93,7 +93,6 @@ Acesse `http://127.0.0.1:8000` ou abra o `frontend/index.html` no navegador.
 Este projeto segue práticas rigorosas para evitar vazamento de dados:
 
 *   ✅ **Ignored by Default**: Arquivos `.env`, `*.json` (chaves) e `firebase_config.js` estão no `.gitignore`.
-*   ✅ **Git History Scrub**: O histórico do Git foi auditado e limpo para garantir que nenhuma chave antiga permaneça.
 *   ✅ **Config Generation**: Credenciais do frontend são injetadas apenas em tempo de deploy/setup local, nunca commitadas.
 
 ---
@@ -102,11 +101,5 @@ Este projeto segue práticas rigorosas para evitar vazamento de dados:
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/search?q=item` | Busca produtos em todas as fontes (Bing, ML, Magalu) |
-| `GET` | `/api/suggestions?q=termo` | (Futuro) Autocomplete de termos de busca |
+| `GET` | `/api/search?q=item` | Busca produtos em todas as fontes (Bing, ML, Magalu)
 
----
-
-<div align="center">
-Desenvolvido com 💜 por Leo Rodrigues
-</div>
