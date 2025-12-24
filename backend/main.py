@@ -17,6 +17,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from backend.firebase_config import init_firebase, get_db
+
+# Inicializa Firebase
+init_firebase()
+
 @app.get("/")
 async def root():
     """
@@ -34,26 +39,37 @@ async def health_check():
 @app.get("/api/suggestions")
 async def get_suggestions(q: str = ""):
     """
-    Retorna sugestões de busca baseadas no termo digitado.
-    Por enquanto, retorna dados mockados.
+    Retorna sugestões de busca.
+    Prioridade: Firebase Cache -> Mock Data
     """
     if not q:
         return {"suggestions": []}
     
-    # Mock data simples para teste
-    mock_db = [
-        "iPhone 15 Pro Max",
-        "iPhone 14",
-        "Samsung Galaxy S24",
-        "Notebook Dell Inspiron",
-        "MacBook Air M2",
-        "Sony PlayStation 5",
-        "Monitor Gamer LG",
-        "Teclado Mecânico Logitech"
-    ]
+    suggestions = []
+    db = get_db()
     
-    # Filtro case-insensitive
-    filtered = [item for item in mock_db if q.lower() in item.lower()]
+    # Tentativa 1: Buscar no Firebase (se estiver conectado)
+    if db:
+        try:
+            # Busca produtos que começam com o termo digitado
+            # Nota: Firestore não tem 'LIKE' nativo simples, usaremos str_start/str_end
+            users_ref = db.collection('products')
+            # Truque para simular 'startswith'
+            end_q = q + '\uf8ff'
+            docs = users_ref.where('title', '>=', q).where('title', '<=', end_q).limit(5).stream()
+            
+            suggestions = [doc.to_dict().get('title') for doc in docs]
+        except Exception as e:
+            print(f"Erro no Firestore: {e}")
     
-    # Limita a 5 resultados
-    return {"suggestions": filtered[:5]}
+    # Tentativa 2: Se não houver resultados no banco (ou banco offline), usa Mock
+    if not suggestions:
+        mock_db = [
+            "iPhone 15 Pro Max", "iPhone 14", "Samsung Galaxy S24",
+            "Notebook Dell Inspiron", "MacBook Air M2", "Sony PlayStation 5",
+            "Monitor Gamer LG", "Teclado Mecânico Logitech", "Cadeira Gamer",
+            "Mouse Sem Fio", "iPad Pro", "AirPods Pro"
+        ]
+        suggestions = [item for item in mock_db if q.lower() in item.lower()]
+    
+    return {"suggestions": suggestions[:5]}
