@@ -17,14 +17,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from backend.firebase_config import init_firebase, get_db
-
+from backend.firebase_config import init_firebase, get_db, get_firestore_client
 from backend.scrapers.mercadolivre import MercadoLivreScraper
 from backend.scrapers.magazineluiza import MagazineLuizaScraper
+from backend.scrapers.bing_shopping import BingShoppingScraper
+from backend.database import save_search_results
+from typing import List
 import asyncio
+import time
 
 # Inicializa Firebase
 init_firebase()
+
+# Inicializa Scrapers globalmente
+ml_scraper = MercadoLivreScraper()
+magalu_scraper = MagazineLuizaScraper()
+bing_scraper = BingShoppingScraper()
 
 @app.get("/")
 async def root():
@@ -43,27 +51,45 @@ async def health_check():
 @app.get("/api/search")
 async def search_products(q: str):
     """
-    Busca produtos em múltiplos sites (ML + Magalu) em paralelo.
+    Busca produtos em múltiplos sites (Bing, ML, Magalu) em paralelo.
+    Agora usa Bing Shopping como fonte principal de Dados Reais.
     """
-    print(f"Recebendo busca por: {q}")
-    
-    ml_scraper = MercadoLivreScraper()
-    magalu_scraper = MagazineLuizaScraper()
-    
-    # Executa os dois scrapers ao mesmo tempo (Paralelismo Assíncrono)
-    # Isso faz com que o tempo total seja igual ao do scraper mais lento, não a soma dos dois.
-    results_ml, results_magalu = await asyncio.gather(
+    print(f"Recebendo busca por: {q} - Iniciando scraping...")
+    start_time = time.time()
+
+    # Dispara buscas em paralelo
+    # Priorizando Bing por ser mais estável com dados reais
+    results = await asyncio.gather(
+        bing_scraper.search(q),
         ml_scraper.search(q),
         magalu_scraper.search(q)
     )
+    # results é uma lista de listas: [[bing_items], [ml_items], [magalu_items]]
+    # Flatten e unifica
+    all_products = []
+    for r in results:
+        all_products.extend(r)
     
-    # Junta tudo
-    all_results = results_ml + results_magalu
+    # Lógica de Prioridade: Se tiver dados reais, esconde os mocks
+    real_products = [p for p in all_products if "(Mock)" not in p['store']]
     
-    # Ordena pelo menor preço
-    all_results.sort(key=lambda x: x['price'])
+    if real_products:
+        final_products = real_products
+        print(f"✅ Retornando {len(final_products)} produtos REAIS (Mocks ocultados).")
+    else:
+        final_products = all_products
+        print(f"⚠️ Apenas Mocks disponíveis. Retornando {len(final_products)} mocks.")
     
-    return {"results": all_results}
+    # Ordenação por preço
+    final_products.sort(key=lambda x: x['price'])
+    
+    # Salva no histórico (opcional firestore)
+    # save_search_results(q, final_products)
+
+    duration = time.time() - start_time
+    print(f"⏱️ Busca concluída em {duration:.2f} segundos.")
+    
+    return final_products
 
 @app.get("/api/suggestions")
 async def get_suggestions(q: str = ""):

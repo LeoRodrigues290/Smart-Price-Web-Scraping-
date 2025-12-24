@@ -185,4 +185,4 @@ function renderResults(products) {
 
     container.innerHTML = html;
 }
-```
+

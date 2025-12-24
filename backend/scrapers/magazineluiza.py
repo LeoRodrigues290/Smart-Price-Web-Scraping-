@@ -12,83 +12,116 @@ class MagazineLuizaScraper(BaseScraper):
         products = []
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            # Stealth Args: Tenta esconder que é um robô
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    '--disable-blink-features=AutomationControlled',
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-infobars',
+                    '--window-position=0,0',
+                    '--ignore-certifcate-errors',
+                    '--ignore-certifcate-errors-spki-list',
+                    '--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"'
+                ]
+            )
             context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                viewport={'width': 1280, 'height': 800}
             )
             page = await context.new_page()
+            
+            # Script extra para mascarar o webdriver
+            await page.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                })
+            """)
 
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                await page.goto(url, wait_until="domcontentloaded", timeout=25000)
                 
-                # Tenta esperar por um seletor de produto genérico
-                # Magalu costuma usar data-testid ou classes específicas
-                try:
-                    await page.wait_for_selector('[data-testid="product-card-container"]', timeout=8000)
-                except:
-                    # Se falhar, segue o baile e tenta parsear o que tiver
-                    print("⚠️ Timeout esperando seletor específico do Magalu, tentando parsear HTML direto...")
-                    pass
+                # Scroll para garantir carregamento de lazy load
+                await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                await asyncio.sleep(2) # Espera renderizar
 
                 content = await page.content()
                 soup = BeautifulSoup(content, "html.parser")
                 
-                # Seletores do Magalu (Podem mudar, então tentar alguns padrões)
-                # Padrão atual: data-testid="product-card-container"
-                items = soup.find_all("div", attrs={"data-testid": "product-card-container"})
+                # ESTRATÉGIA HEURÍSTICA (Robustez contra mudança de CSS)
+                # 1. Acha todos os preços (R$)
+                # 2. Sobe na árvore DOM para achar o card do produto
                 
-                # Se não achar, tenta fallback para classes comuns antiga
-                if not items:
-                     items = soup.select('li > a[href*="/p/"]') # Seletor genérico de lista de produtos
-
-                for item in items:
+                import re
+                prices_elements = soup.find_all(string=re.compile(r'R\$\s?[\d\.,]+'))
+                
+                seen_links = set()
+                
+                for price_elem in prices_elements:
+                    if len(products) >= 20: break
+                    
                     try:
-                        # Título
-                        title_tag = item.find("h2", attrs={"data-testid": "product-title"})
-                        if not title_tag:
-                            title_tag = item.find("h2")
-                        title = title_tag.text.strip() if title_tag else "Sem Título"
+                        # Sobe até 5 níveis para achar um container que tenha Link e Titulo
+                        parent = price_elem.parent
+                        card = None
+                        
+                        for _ in range(5):
+                            if not parent: break
+                            # Um card de produto deve ter um Link (a) e uma Imagem (img)
+                            if parent.find("a", href=True) and parent.find("img"):
+                                card = parent
+                                if len(str(card)) > 5000: # Evita pegar o body inteiro
+                                    card = None
+                                    continue
+                                break
+                            parent = parent.parent
+                        
+                        if not card: continue
+                        
+                        # Extração de dados do Card encontrado
                         
                         # Link
-                        # O container as vezes é o próprio link ou tem um link dentro
                         link = ""
-                        if item.name == "a":
-                             link = item["href"]
-                        else:
-                             link_tag = item.find("a", attrs={"data-testid": "product-card-container"}) 
-                             if not link_tag:
-                                 link_tag = item.find("a")
-                             link = link_tag["href"] if link_tag else ""
+                        link_tag = card.find("a", href=True)
+                        if link_tag:
+                            link = link_tag['href']
+                            if not link.startswith("http"):
+                                link = f"https://www.magazineluiza.com.br{link}"
                         
-                        # Magalu usa links relativos as vezes
-                        if link and not link.startswith("http"):
-                            link = f"https://www.magazineluiza.com.br{link}"
+                        if not link or link in seen_links: continue
+                        seen_links.add(link)
+                        
+                        # Título
+                        title = ""
+                        title_tag = card.find(["h2", "h3", "h4"])
+                        if title_tag:
+                            title = title_tag.text.strip()
+                        else:
+                            # Tenta texto do link ou imagem alt
+                            if link_tag: title = link_tag.get_text(" ", strip=True)
+                        
+                        if not title:
+                            img = card.find("img")
+                            if img: title = img.get("alt") or ""
+                            
+                        # Preço (já temos a string, limpa ela)
+                        price = 0.0
+                        p_match = re.search(r'R\$\s?([\d\.,]+)', str(price_elem))
+                        if p_match:
+                            p_clean = p_match.group(1).replace('.', '').replace(',', '.')
+                            try:
+                                price = float(p_clean)
+                            except: pass
                         
                         # Imagem
-                        img_tag = item.find("img", attrs={"data-testid": "product-image"})
-                        if not img_tag:
-                            img_tag = item.find("img")
-                        image = img_tag.get("src") or img_tag.get("data-src") if img_tag else ""
-                        
-                        # Preço
-                        price_tag = item.find("p", attrs={"data-testid": "price-value"})
-                        if not price_tag:
-                            # Tenta padrão antigo
-                             price_tag = item.find("span", text=lambda t: t and "R$" in t)
-
-                        price = 0.0
-                        if price_tag:
-                            price_text = price_tag.text.replace("R$", "").replace(".", "").replace(",", ".").strip()
-                            # Limpeza extra para casos como "à vista"
-                            price_text = price_text.split(" ")[0] 
-                            try:
-                                price = float(price_text)
-                            except:
-                                pass
-
-                        # Só adiciona se tiver título e preço válido
+                        image = ""
+                        img_tag = card.find("img")
+                        if img_tag:
+                             image = img_tag.get("src") or img_tag.get("data-src") or ""
+                             
                         if title and price > 0:
-                            products.append({
+                             products.append({
                                 "title": title,
                                 "price": price,
                                 "currency": "BRL",
@@ -96,18 +129,15 @@ class MagazineLuizaScraper(BaseScraper):
                                 "image": image,
                                 "store": "Magazine Luiza"
                             })
+                            
                     except Exception as e:
-                        # print(f"Erro parser item Magalu: {e}")
                         continue
                 
-                print(f"✅ Encontrados {len(products)} produtos no Magalu.")
+                print(f"✅ Encontrados {len(products)} produtos no Magalu via heurística.")
                 
-                # Mock Fallback se bloqueado (igual ao ML)
                 if not products:
-                     print("⚠️ Nenhum produto encontrado no Magalu. Ativando Mock.")
-                     products = [
-                        {"title": f"MOCK Magalu: {query} Super", "price": 2400.0, "currency": "BRL", "link": "#", "image": "https://img.freepik.com/fotos-gratis/sacolas-de-compras-coloridas_23-2147652053.jpg", "store": "Magazine Luiza (Mock)"},
-                     ]
+                     print("⚠️ Nenhum produto encontrado no Magalu.")
+                     # NUNCA retornar mocks
 
             except Exception as e:
                 print(f"❌ Erro no Playwright Magalu: {e}")

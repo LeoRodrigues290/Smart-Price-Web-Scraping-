@@ -1,4 +1,9 @@
 venv/
 __pycache__/
 .env
+*.json
+google-credentials.json
+serviceAccountKey.json
+frontend/firebase_config.js
+.DS_Store
 .DS_Store
