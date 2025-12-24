@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Price - Buscador de Preços</title>
+    
+    <!-- Usando Tailwind CSS via CDN para prototipagem rápida -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Nossos estilos customizados -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Container Principal -->
+    <div class="min-h-screen flex flex-col items-center justify-center p-4">
+        
+        <!-- Header -->
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-600 mb-2">Smart Price 🔍</h1>
+            <p class="text-lg text-gray-600">Encontre o melhor preço em segundos.</p>
+        </header>
+
+        <!-- Área de Busca (Vamos implementar a lógica na Fase 2) -->
+        <main class="w-full max-w-2xl bg-white rounded-xl shadow-lg p-6 md:p-8">
+            <div class="flex flex-col gap-4">
+                <label for="search" class="sr-only">Buscar produto</label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="search" 
+                        placeholder="Digite o nome do produto (ex: iPhone 15, Notebook...)" 
+                        class="w-full pl-4 pr-12 py-4 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-lg"
+                    >
+                    <button class="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Lista de Sugestões (Hidden por padrão) -->
+                <div id="suggestions" class="hidden bg-white border border-gray-100 rounded-lg shadow-sm mt-1">
+                    <!-- Itens serão injetados via JS -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-sm text-gray-400">
+            &copy; 2024 Smart Price Project
+        </footer>
+
+    </div>
+
+    <!-- Nosso script principal -->
+    <script src="app.js"></script>
+</body>
+</html>
