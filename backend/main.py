@@ -30,3 +30,30 @@ async def health_check():
     Endpoint para verificar se a API está respondendo corretamente.
     """
     return {"status": "ok", "service": "smart-price-api"}
+
+@app.get("/api/suggestions")
+async def get_suggestions(q: str = ""):
+    """
+    Retorna sugestões de busca baseadas no termo digitado.
+    Por enquanto, retorna dados mockados.
+    """
+    if not q:
+        return {"suggestions": []}
+    
+    # Mock data simples para teste
+    mock_db = [
+        "iPhone 15 Pro Max",
+        "iPhone 14",
+        "Samsung Galaxy S24",
+        "Notebook Dell Inspiron",
+        "MacBook Air M2",
+        "Sony PlayStation 5",
+        "Monitor Gamer LG",
+        "Teclado Mecânico Logitech"
+    ]
+    
+    # Filtro case-insensitive
+    filtered = [item for item in mock_db if q.lower() in item.lower()]
+    
+    # Limita a 5 resultados
+    return {"suggestions": filtered[:5]}
