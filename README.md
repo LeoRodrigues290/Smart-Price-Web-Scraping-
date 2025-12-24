@@ -1,79 +1,112 @@
 # 🛒 Smart Price Web Scraping
 
-> **Monitoramento Inteligente de Preços com Dados Reais**
+<div align="center">
 
-Este projeto é um agregador de preços que utiliza técnicas avançadas de Web Scraping para buscar dados em tempo real de grandes e-commerce (Mercado Livre, Magazine Luiza, Amazon via Bing) e apresentar as melhores ofertas para o usuário.
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.95%2B-009688?style=for-the-badge&logo=fastapi)
+![Playwright](https://img.shields.io/badge/Playwright-Stealth-45ba4b?style=for-the-badge&logo=google-chrome)
+![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?style=for-the-badge&logo=firebase)
 
-## 🚀 Funcionalidades Principais
+**Monitoramento de Preços Inteligente com Dados Reais**
+<br/>
+*Busca em múltiplos e-commerces, contorna bloqueios e entrega as melhores ofertas.*
 
-*   **Busca em Tempo Real (Real-Time Scraping)**: Dados extraídos na hora, garantindo preços atualizados.
-*   **Bing Shopping Integrado**: Utiliza o Bing como agregador robusto para contornar bloqueios de bots comuns em sites individuais.
-*   **Heurística de Parsing**: Algoritmos inteligentes que identificam produtos visualmente (Preço + Imagem + Link), tornando o scraper resiliente a mudanças de layout (CSS).
-*   **Modo Stealth (Indetectável)**: Uso de Playwright com flags especiais para simular comportamento humano e evitar bloqueios (403/Captcha).
-*   **Histórico no Firebase**: Integração com Firestore para salvar termos pesquisados (opcional).
-*   **Segurança**: Gerenciamento de chaves via variáveis de ambiente (`.env`) e scripts de setup seguros.
+[Instalação](#-instalação) • [Como Funciona](#-como-funciona) • [API](#-api) • [Segurança](#-arquitetura-de-segurança)
 
-## 🛠️ Tecnologias Utilizadas
+</div>
 
-*   **Backend**: Python 3.10+, FastAPI, Uvicorn.
-*   **Scraping**: Playwright (Browser Automation), BeautifulSoup4 (HTML Parsing).
-*   **Frontend**: HTML5, CSS3 (Moderno/Responsivo), JavaScript (Vanilla).
-*   **Banco de Dados**: Firebase Firestore (NoSQL).
+---
 
-## ⚙️ Instalação e Configuração
+## ⚡️ O Que Este Projeto Faz?
 
-### 1. Pré-requisitos
-*   python 3.9+ 
-*   pip
+Diferente de scrapers comuns que quebram com qualquer mudança de CSS ou bloqueio de IP, o **Smart Price** utiliza uma abordagem híbrida robusta:
 
-### 2. Configuração do Backend
+1.  **🔍 Bing Shopping Aggregation**: Usa o Bing como "proxy" natural para buscar preços em centenas de lojas (Amazon, KaBuM!, Mercado Livre) sem ser bloqueado.
+2.  **🧩 Heurística Visual**: Ao navegar nas lojas (fallback), nossos robôs não dependem apenas de nomes de classes (`.price`), mas analisam a estrutura visual (Texto de preço `R$` + Imagem + Link) para identificar produtos.
+3.  **🥷 Modo Stealth**: Simula nuancias de comportamento humano (mouse, user-agent dinâmico) para passar despercebido por firewalls.
+4.  **💾 Histórico Cloud**: Salva todas as buscas no **Firebase Firestore** para análise de dados.
+
+---
+
+## 📁 Estrutura do Projeto
+
+```mermaid
+graph TD
+    A[Usuário] -->|Busca: 'iPhone 13'| B(Frontend / API)
+    B -->|Paralelo| C{Bing Scraper}
+    B -->|Fallback| D{Mercado Livre Scraper}
+    B -->|Fallback| E{Magalu Scraper}
+    C -->|Retorna Dados Reais| B
+    D -->|Retorna Dados Reais| B
+    E -->|Retorna Dados Reais| B
+    B -->|Salva| F[(Firebase Firestore)]
+```
+
+---
+
+## 🚀 Instalação (Passo a Passo)
+
+### 1. Preparar Ambiente
 ```bash
 # Clone o repositório
 git clone https://github.com/LeoRodrigues290/Smart-Price-Web-Scraping-.git
 cd Smart-Price-Web-Scraping-
 
-# Crie e ative o ambiente virtual
+# Ambiente Virtual
 python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate   # Windows
+source venv/bin/activate
 
-# Instale as dependências
+# Dependências
 pip install -r requirements.txt
-
-# Instale os navegadores do Playwright
 playwright install chromium
 ```
 
-### 3. Configuração de Segurança (.env)
-Crie um arquivo `.env` na raiz do projeto com suas credenciais:
-```ini
-FIREBASE_API_KEY=SuaApiKeyAqui
-FIREBASE_PROJECT_ID=SeuProjectIdAqui
-```
-> **Nota**: Nunca comite este arquivo!
+### 2. Configurar Segurança 🔐
+O projeto **não** salva chaves no código. Você precisa criar um arquivo `.env` na raiz:
 
-### 4. Configuração do Frontend
-Para gerar o arquivo de configuração seguro do frontend:
+```ini
+# Conteúdo do arquivo .env
+FIREBASE_API_KEY="AIzaSy..."
+FIREBASE_PROJECT_ID="smart-price-..."
+GOOGLE_APPLICATION_CREDENTIALS="serviceAccountKey.json"
+```
+
+### 3. Gerar Config do Frontend
+Como o frontend é estático (JS), ele precisa de um arquivo de config gerado seguramente:
+
 ```bash
+# Este script lê seu .env e cria o arquivo frontend/firebase_config.js
 python3 scripts/setup_config.py
 ```
 
-### 5. Execução
+### 4. Rodar 🏃‍♂️
 ```bash
-# Inicie o servidor Backend
+# Inicia o Backend (API)
 uvicorn backend.main:app --reload
-
-# O Frontend roda em qualquer servidor estático ou abrindo o arquivo index.html no navegador
 ```
-
-## 🔒 Arquitetura de Segurança
-*   **Chaves de API**: Não são expostas no código fonte versionado.
-*   **Google Credentials**: O backend busca `serviceAccountKey.json` localmente para escritas no banco; se não encontrar, roda em modo "Safe" (Leitura/Offline).
-*   **Commits Limpos**: Histórico git auditado para garantir zero vazamento de segredos.
-
-## ⚠️ Sobre Bloqueios e Performance
-Scraping depende da disponibilidade dos sites alvo. 
-*   Para mitigar bloqueios, usamos **Timeouts de 15s**. Se um site (ex: Magalu) demorar demais, ele é abortado para não travar a experiência do usuário, e os resultados do Bing assumem a prioridade.
+Acesse `http://127.0.0.1:8000` ou abra o `frontend/index.html` no navegador.
 
 ---
-Desenvolvido por Leo Rodrigues.
+
+## 🔒 Arquitetura de Segurança
+
+Este projeto segue práticas rigorosas para evitar vazamento de dados:
+
+*   ✅ **Ignored by Default**: Arquivos `.env`, `*.json` (chaves) e `firebase_config.js` estão no `.gitignore`.
+*   ✅ **Git History Scrub**: O histórico do Git foi auditado e limpo para garantir que nenhuma chave antiga permaneça.
+*   ✅ **Config Generation**: Credenciais do frontend são injetadas apenas em tempo de deploy/setup local, nunca commitadas.
+
+---
+
+## 🛠 endpoints da API
+
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| `GET` | `/api/search?q=item` | Busca produtos em todas as fontes (Bing, ML, Magalu) |
+| `GET` | `/api/suggestions?q=termo` | (Futuro) Autocomplete de termos de busca |
+
+---
+
+<div align="center">
+Desenvolvido com 💜 por Leo Rodrigues
+</div>
