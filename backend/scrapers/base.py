@@ -8,7 +8,7 @@ class BaseScraper(ABC):
     """
     
     @abstractmethod
-    def search(self, query: str) -> List[Dict]:
+    async def search(self, query: str) -> List[Dict]:
         """
         Método abstrato que deve ser implementado por cada scraper.
         Recebe um termo de busca e retorna uma lista de dicionários com os produtos.

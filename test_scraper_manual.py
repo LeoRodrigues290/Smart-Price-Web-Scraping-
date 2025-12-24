@@ -1,8 +1,9 @@
+import asyncio
 from backend.scrapers.mercadolivre import MercadoLivreScraper
 
-def test_scraper():
+async def test_scraper():
     scraper = MercadoLivreScraper()
-    results = scraper.search("iphone 13")
+    results = await scraper.search("iphone 13")
     
     print("-" * 50)
     for p in results[:3]:
@@ -12,4 +13,4 @@ def test_scraper():
         print("-" * 20)
 
 if __name__ == "__main__":
-    test_scraper()
+    asyncio.run(test_scraper())

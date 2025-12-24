@@ -19,6 +19,8 @@ app.add_middleware(
 
 from backend.firebase_config import init_firebase, get_db
 
+from backend.scrapers.mercadolivre import MercadoLivreScraper
+
 # Inicializa Firebase
 init_firebase()
 
@@ -35,6 +37,16 @@ async def health_check():
     Endpoint para verificar se a API está respondendo corretamente.
     """
     return {"status": "ok", "service": "smart-price-api"}
+
+@app.get("/api/search")
+async def search_products(q: str):
+    """
+    Busca produtos em múltiplos sites (atualmente ML).
+    """
+    print(f"Recebendo busca por: {q}")
+    scraper = MercadoLivreScraper()
+    results = await scraper.search(q)
+    return {"results": results}
 
 @app.get("/api/suggestions")
 async def get_suggestions(q: str = ""):
