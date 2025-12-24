@@ -1,60 +1,167 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Price - Buscador de Preços</title>
-    
-    <!-- Usando Tailwind CSS via CDN para prototipagem rápida -->
+
+    <!-- Google Fonts: Outfit (Moderno) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Usando Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Nossos estilos customizados -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#4F46E5',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Estilos Customizados -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+
+<body
+    class="bg-gray-50 text-slate-800 font-sans min-h-screen relative overflow-x-hidden selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- Background Decoration -->
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-400/10 blur-3xl"></div>
+        <div class="absolute top-[20%] -right-[10%] w-[40%] h-[60%] rounded-full bg-indigo-400/10 blur-3xl"></div>
+    </div>
 
     <!-- Container Principal -->
-    <div class="min-h-screen flex flex-col items-center justify-center p-4">
-        
+    <div class="container mx-auto px-4 py-8 flex flex-col items-center min-h-screen max-w-6xl">
+
         <!-- Header -->
-        <header class="mb-10 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-blue-600 mb-2">Smart Price 🔍</h1>
-            <p class="text-lg text-gray-600">Encontre o melhor preço em segundos.</p>
+        <header class="mb-16 text-center mt-10 animate-fade-in-down">
+            <div
+                class="inline-flex items-center justify-center p-3 bg-white/50 backdrop-blur-md border border-white/40 rounded-2xl shadow-sm mb-6">
+                <span class="text-2xl mr-2">🛍️</span>
+                <span class="font-semibold text-slate-600 tracking-wide text-sm uppercase">Shopping Intelligence</span>
+            </div>
+            <h1
+                class="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 mb-6 tracking-tight">
+                Smart Price
+            </h1>
+            <p class="text-xl md:text-2xl text-slate-500 font-light max-w-2xl mx-auto leading-relaxed">
+                Compare preços reais em segundos. <br>
+                <span class="text-blue-600 font-medium">Bing</span>, <span class="text-yellow-600 font-medium">Mercado
+                    Livre</span> e <span class="text-indigo-600 font-medium">Magalu</span> em um só lugar.
+            </p>
         </header>
 
-        <!-- Área de Busca (Vamos implementar a lógica na Fase 2) -->
-        <main class="w-full max-w-2xl bg-white rounded-xl shadow-lg p-6 md:p-8">
-            <div class="flex flex-col gap-4">
-                <label for="search" class="sr-only">Buscar produto</label>
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        id="search" 
-                        placeholder="Digite o nome do produto (ex: iPhone 15, Notebook...)" 
-                        class="w-full pl-4 pr-12 py-4 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-lg"
-                    >
-                    <button class="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+        <!-- Área de Busca -->
+        <main class="w-full max-w-3xl relative z-10">
+            <div
+                class="bg-white/70 backdrop-blur-xl border border-white/50 rounded-3xl shadow-2xl shadow-blue-900/5 p-2 transition-all duration-300 hover:shadow-blue-900/10 focus-within:ring-4 focus-within:ring-blue-500/20">
+                <div class="relative flex items-center">
+                    <div class="absolute left-6 text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-search">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3" />
                         </svg>
-                    </button>
+                    </div>
+                    <input type="text" id="search" placeholder="O que você procura hoje? (ex: iPhone 13, Airfryer...)"
+                        class="w-full bg-transparent border-none pl-16 pr-32 py-5 text-xl text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-0 rounded-2xl font-medium"
+                        autocomplete="off">
+                    <div class="absolute right-2">
+                        <button id="btn-search"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-blue-600/30 active:scale-95 flex items-center gap-2">
+                            Buscar
+                        </button>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Lista de Sugestões (Hidden por padrão) -->
-                <div id="suggestions" class="hidden bg-white border border-gray-100 rounded-lg shadow-sm mt-1">
-                    <!-- Itens serão injetados via JS -->
+            <!-- Lista de Sugestões -->
+            <div id="suggestions"
+                class="hidden absolute w-full mt-2 bg-white/90 backdrop-blur-md border border-gray-100 rounded-2xl shadow-xl overflow-hidden z-50 animate-fade-in-up">
+                <!-- Injetado via JS -->
+            </div>
+
+            <!-- Área de Resultados -->
+            <div id="results-area" class="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards Injetados via JS -->
+            </div>
+
+            <!-- Loading State (Inicialmente hidden) -->
+            <div id="loading" class="hidden mt-20 text-center">
+                <div
+                    class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent">
                 </div>
+                <p class="mt-4 text-slate-500 font-medium animate-pulse">Varrendo a internet atrás de ofertas...</p>
             </div>
         </main>
 
         <!-- Footer -->
-        <footer class="mt-12 text-sm text-gray-400">
-            &copy; 2024 Smart Price Project
+        <footer class="mt-24 pb-8 text-center text-slate-400 text-sm font-light">
+            <p>Smart Price Project &copy; 2024 • Desenvolvido com 💙 e Python</p>
         </footer>
 
     </div>
 
-    <!-- Nosso script principal -->
     <script src="app.js"></script>
 </body>
+
+</html>
+
+<!-- Container Principal -->
+<div class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Header -->
+    <header class="mb-10 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-blue-600 mb-2">Smart Price 🔍</h1>
+        <p class="text-lg text-gray-600">Encontre o melhor preço em segundos.</p>
+    </header>
+
+    <!-- Área de Busca (Vamos implementar a lógica na Fase 2) -->
+    <main class="w-full max-w-2xl bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <div class="flex flex-col gap-4">
+            <label for="search" class="sr-only">Buscar produto</label>
+            <div class="relative">
+                <input type="text" id="search" placeholder="Digite o nome do produto (ex: iPhone 15, Notebook...)"
+                    class="w-full pl-4 pr-12 py-4 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-lg">
+                <button
+                    class="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Lista de Sugestões (Hidden por padrão) -->
+            <div id="suggestions" class="hidden bg-white border border-gray-100 rounded-lg shadow-sm mt-1">
+                <!-- Itens serão injetados via JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 text-sm text-gray-400">
+        &copy; 2024 Smart Price Project
+    </footer>
+
+</div>
+
+<!-- Nosso script principal -->
+<script src="app.js"></script>
+</body>
+
 </html>
